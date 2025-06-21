@@ -9,7 +9,7 @@ import json
 from threading import Thread
 import argparse
 
-#http://localhost:8001/v1/chat/completions#forces
+#http://localhost:8001/v1/chat/completions
 parser = argparse.ArgumentParser(description="Run Model")
 parser.add_argument("--model_path", type=str, required=True,
                     help="Path to the model directory downloaded locally")

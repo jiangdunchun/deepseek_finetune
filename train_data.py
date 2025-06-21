@@ -6,6 +6,9 @@ import time
 import json
 from typing import List
 from dataclasses import dataclass
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 @dataclass
@@ -30,16 +33,19 @@ def dataclass_to_dict(instance):
 def init_args():
     parser = argparse.ArgumentParser(description="Prepare the train data")
 
-    parser.add_argument("--prompt", type=str, default="",
+    parser.add_argument("--prompt", type=str, default="./train_data/prompt.txt",
                         help="prompt text file")
-    parser.add_argument("--question", type=str, default="",
+    parser.add_argument("--question", type=str, default="./train_data/question.txt",
                         help="question file in lines")
     parser.add_argument("--topic", type=str, default="",
                         help="topic conversation exported from Cherry Studio")
     parser.add_argument("--auth_key", type=str, default="",
                         help="auth key of deekseek, also can be set in .env by DEEPSEEK_AUTH_KEY=**********")
-    parser.add_argument("--output", type=str, required=True,
+    # parser.add_argument("--output", type=str, required=True,
+    #                     help="train data in jsonl format")
+    parser.add_argument("--output", type=str, default="./train_data/train_data.jsonl",
                         help="train data in jsonl format")
+
 
     args = parser.parse_args()
 
@@ -68,7 +74,7 @@ def ask_deepseek(args):
     data = {
         "model": "deepseek-chat",
         "messages": [],
-        "temperature": 0.3;
+        "temperature": 0.3,
         "stream": False
     }
 
@@ -78,30 +84,38 @@ def ask_deepseek(args):
             "content": args.prompt_txt
         })
 
-    rounds = [] 
+    rounds = []
+    def request_answer(ask):
+        data["messages"].append({
+            "role": "user",
+            "content": ask
+        })
+        response = requests.post(url, headers=headers, json=data)
 
+        answer = "failed to get answer!!!"
+        if response.status_code == 200:
+            result = response.json()
+            answer = result["choices"][0]["message"]["content"]
+        print("user>>>>>>>>>>>>>>>>>>>>>>\n", ask)
+        print("assistant>>>>>>>>>>>>>>>>>\n", answer)
+
+        data["messages"].append({
+            "role": "assistant",
+            "content": answer
+        })
+        rounds.append(Round(user=ask, assistant=answer))
+        if "TYPE: MCP" in answer:
+            request_answer("success")
+
+    
     with open(args.question, 'r', encoding='utf-8') as file: 
         for line in file:
             ask = line.strip()
-            if ask == '' or ask == '---': continue
+            if ask == '': continue
 
-            data["messages"].append({
-                "role": "user",
-                "content": ask
-            })
-
-            response = requests.post(url, headers=headers, json=data)
-
-            if response.status_code == 200:
-                result = response.json()
-                answer = result["choices"][0]["message"]["content"]
-                data["messages"].append({
-                    "role": "assistant",
-                    "content": ask
-                })
-                print("user>>>>>>>>>>>>>>>>>>>>>>\n", ask)
-                print("assistant>>>>>>>>>>>>>>>>>\n", answer)
-                rounds.append(Round(user=ask, assistant=answer))
+            request_answer(ask)
+            time.sleep(1)
+                
         
     conversation = Conversation(conversation_id=int(time.time()), conversation=rounds)
     return conversation

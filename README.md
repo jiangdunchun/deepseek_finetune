@@ -1,5 +1,6 @@
 pip install --upgrade pip
-pip install torch transformers accelerate peft bitsandbytes loguru
+pip install torch --index-url https://download.pytorch.org/whl/cu126
+pip install transformers accelerate peft bitsandbytes dotenv fastapi
 pip install swanlab[dashboard]
 
 https://github.com/CherryHQ/cherry-studio
