@@ -68,6 +68,7 @@ def ask_deepseek(args):
     data = {
         "model": "deepseek-chat",
         "messages": [],
+        "temperature": 0.3;
         "stream": False
     }
 
