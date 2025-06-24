@@ -18,6 +18,7 @@ class Round:
 @dataclass
 class Conversation:
     conversation_id:int
+    prompt:str
     conversation:List[Round]
 def dataclass_to_dict(instance):
     if hasattr(instance, '__dataclass_fields__'):
@@ -33,9 +34,9 @@ def dataclass_to_dict(instance):
 def init_args():
     parser = argparse.ArgumentParser(description="Prepare the train data")
 
-    parser.add_argument("--prompt", type=str, default="./train_data/prompt.md",
+    parser.add_argument("--prompt", type=str, default="",
                         help="prompt text file")
-    parser.add_argument("--question", type=str, default="./train_data/question.txt",
+    parser.add_argument("--question", type=str, default="",
                         help="question file in lines")
     parser.add_argument("--topic", type=str, default="",
                         help="topic conversation exported from Cherry Studio")
@@ -121,7 +122,7 @@ def ask_deepseek(args):
             time.sleep(1)
                 
         
-    conversation = Conversation(conversation_id=int(time.time()), conversation=rounds)
+    conversation = Conversation(conversation_id=int(time.time()), prompt=args.prompt_txt, conversation=rounds)
     return conversation
 
 def process_topic(args):
@@ -151,7 +152,7 @@ def process_topic(args):
         if role0 == 'User' and role1 == 'Assistant':
             rounds.append(Round(user=content0, assistant=content1))
     
-    conversation = Conversation(conversation_id=int(time.time()), conversation=rounds)
+    conversation = Conversation(conversation_id=int(time.time()), prompt=args.prompt_txt, conversation=rounds)
     return conversation
 
 

@@ -2,7 +2,7 @@ import argparse
 from os.path import join
 import pandas as pd
 from datasets import Dataset
-from loguru import logger
+#from loguru import logger
 from transformers import (
     TrainingArguments,
     AutoModelForCausalLM,
@@ -218,15 +218,19 @@ def load_model(args, train_dataset, data_collator):
 #{"conversation_id": 1, "conversation": [{"user": "", "assistant": ""}]}
 def process_data(data: dict, tokenizer, max_seq_length):
     conversation = data["conversation"]
-    input_ids, attention_mask, labels = [], [], []
-
-    print("---------------->", len(conversation))
+    pre_text = ""
+    if data["prompt"] != "":
+        pre_text = "System:" + data["prompt"] + "\n\n"
+    samples = []
     for i, conv in enumerate(conversation):
         human_text = conv["user"].strip()
         assistant_text = conv["assistant"].strip()
 
-        input_text = "User:" + human_text + "\n\nAssistant:"
+        input_text = pre_text + "User:" + human_text + "\n\nAssistant:"
+        pre_text = input_text + assistant_text + "\n\n"
 
+        #print("input>>>>>>>>>>>>>:", input_text)
+        #print("output>>>>>>>>>>>>>:", assistant_text)
         input_tokenizer = tokenizer(
             input_text,
             add_special_tokens=False,
@@ -242,20 +246,22 @@ def process_data(data: dict, tokenizer, max_seq_length):
             return_tensors=None,
         )
 
-        input_ids += (input_tokenizer["input_ids"] + output_tokenizer["input_ids"] + [tokenizer.eos_token_id])
-        attention_mask += input_tokenizer["attention_mask"] + output_tokenizer["attention_mask"] + [1]
-        labels += ([-100] * len(input_tokenizer["input_ids"]) + output_tokenizer["input_ids"] + [tokenizer.eos_token_id])
+        input_ids = (input_tokenizer["input_ids"] + output_tokenizer["input_ids"] + [tokenizer.eos_token_id])
+        attention_mask = input_tokenizer["attention_mask"] + output_tokenizer["attention_mask"] + [1]
+        labels = ([-100] * len(input_tokenizer["input_ids"]) + output_tokenizer["input_ids"] + [tokenizer.eos_token_id])
 
-    if len(input_ids) > max_seq_length:
-        input_ids = input_ids[:max_seq_length]
-        attention_mask = attention_mask[:max_seq_length]
-        labels = labels[:max_seq_length]
+        if len(input_ids) > max_seq_length:
+            input_ids = input_ids[:max_seq_length]
+            attention_mask = attention_mask[:max_seq_length]
+            labels = labels[:max_seq_length]
 
-    return {
-        "input_ids": input_ids,
-        "attention_mask": attention_mask,
-        "labels": labels
-    }
+        samples.append({
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "labels": labels
+        })    
+
+    return samples
 
 
 if __name__ == "__main__":
@@ -268,9 +274,10 @@ if __name__ == "__main__":
     print("*****************proccess data*************************")
     data = pd.read_json(args.train_data, lines=True)
     train_ds = Dataset.from_pandas(data)
-    train_dataset = train_ds.map(process_data,
-                                 fn_kwargs={"tokenizer": tokenizer, "max_seq_length": args.max_seq_length},
-                                 remove_columns=train_ds.column_names)
+    processed_data = []
+    for line in train_ds:
+        processed_data.extend(process_data(line, tokenizer, args.max_seq_length))
+    train_dataset = Dataset.from_list(processed_data)
     data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=True, return_tensors="pt")
 
     print("**************load model and train**********************")
