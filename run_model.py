@@ -44,7 +44,7 @@ async def chat_completion(request: ChatRequest):
     prompt += "\n Assistant:"
 
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    
+    inputs = inputs[-1024:]
     if request.stream:
         def generate_stream():
             streamer = TextIteratorStreamer(tokenizer, skip_prompt=True)

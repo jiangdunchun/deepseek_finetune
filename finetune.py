@@ -251,9 +251,9 @@ def process_data(data: dict, tokenizer, max_seq_length):
         labels = ([-100] * len(input_tokenizer["input_ids"]) + output_tokenizer["input_ids"] + [tokenizer.eos_token_id])
 
         if len(input_ids) > max_seq_length:
-            input_ids = input_ids[:max_seq_length]
-            attention_mask = attention_mask[:max_seq_length]
-            labels = labels[:max_seq_length]
+            input_ids = input_ids[-1*max_seq_length:]
+            attention_mask = attention_mask[-1*max_seq_length]
+            labels = labels[-1*max_seq_length]
 
         samples.append({
             "input_ids": input_ids,
