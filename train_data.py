@@ -7,8 +7,8 @@ import json
 from typing import List
 from dataclasses import dataclass
 import sys
-import io
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+# import io
+# sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 @dataclass
@@ -33,18 +33,18 @@ def dataclass_to_dict(instance):
 def init_args():
     parser = argparse.ArgumentParser(description="Prepare the train data")
 
-    parser.add_argument("--prompt", type=str, default="./train_data/prompt.txt",
+    parser.add_argument("--prompt", type=str, default="./train_data/prompt.md",
                         help="prompt text file")
     parser.add_argument("--question", type=str, default="./train_data/question.txt",
                         help="question file in lines")
     parser.add_argument("--topic", type=str, default="",
                         help="topic conversation exported from Cherry Studio")
+    parser.add_argument("--url", type=str, default="https://api.deepseek.com/v1/chat/completions",
+                        help="api url")
     parser.add_argument("--auth_key", type=str, default="",
                         help="auth key of deekseek, also can be set in .env by DEEPSEEK_AUTH_KEY=**********")
-    # parser.add_argument("--output", type=str, required=True,
-    #                     help="train data in jsonl format")
-    parser.add_argument("--output", type=str, default="./train_data/train_data.jsonl",
-                        help="train data in jsonl format")
+    parser.add_argument("--output", type=str, required=True,
+                        help=".jsonl format for train data, other format for chat history")
 
 
     args = parser.parse_args()
@@ -65,7 +65,6 @@ def ask_deepseek(args):
     if args.question == "": 
         return None
 
-    url = "https://api.deepseek.com/v1/chat/completions"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {args.auth_key}"
@@ -90,7 +89,7 @@ def ask_deepseek(args):
             "role": "user",
             "content": ask
         })
-        response = requests.post(url, headers=headers, json=data)
+        response = requests.post(args.url, headers=headers, json=data)
 
         answer = "failed to get answer!!!"
         if response.status_code == 200:
@@ -152,9 +151,15 @@ def process_topic(args):
 
 
 def append_conversation(args, conversation):
-    with open(args.output, 'a', encoding='utf-8') as file:
-        file.write(json.dumps(dataclass_to_dict(conversation)))
-        file.write('\n')
+    if args.output.endswith(".jsonl"):
+        with open(args.output, 'a', encoding='utf-8') as file:
+            file.write(json.dumps(dataclass_to_dict(conversation)))
+            file.write('\n')
+    else:
+        with open(args.output, 'a', encoding='utf-8') as file:
+            file.write(f"# {conversation.conversation_id}\n\n")
+            for round in conversation.conversation:
+                file.write(f"### User\n\n{round.user}\n\n---\n### Assistant\n\n{round.assistant}\n\n---\n")
 
 
 if __name__ == "__main__":

@@ -139,6 +139,7 @@ git clone https://oauth2:1EDrxJLfQrAcLsadR8yT@www.modelscope.cn/JiangDunchun/dee
 ```
 
 python train_data.py --prompt=./train_data/prompt.md --question=./train_data/question.txt --topic=./train_data/vup_mcp.md --output=./train_data/train_data.jsonl
+python train_data.py --output=./train_data/train_data.jsonl
 
 torchrun finetune.py --model_name_or_path=../.cache/modelscope/models/deepseek-ai/deepseek-llm-7b-chat/ --train_data=./train_data/train_data.jsonl
 
