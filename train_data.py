@@ -43,6 +43,10 @@ def init_args():
                         help="api url")
     parser.add_argument("--auth_key", type=str, default="",
                         help="auth key of deekseek, also can be set in .env by DEEPSEEK_AUTH_KEY=**********")
+    parser.add_argument("--temperature", type=float, default=0.7,
+                        help="temperature of model")
+    parser.add_argument("--top_p", type=float, default=0.9,
+                        help="top_p of model")
     parser.add_argument("--output", type=str, required=True,
                         help=".jsonl format for train data, other format for chat history")
 
@@ -73,7 +77,8 @@ def ask_deepseek(args):
     data = {
         "model": "deepseek-chat",
         "messages": [],
-        "temperature": 0.3,
+        "temperature": args.temperature,
+        "top_p": args.top_p,
         "stream": False
     }
 
