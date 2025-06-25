@@ -67,7 +67,7 @@ async def chat_completion(request: ChatRequest):
             chat_id = int(time.time())
             for answer in streamer:
                 if answer == "": continue
-                #answer = answer.replace("<|endoftext|>", "").replace("<|end|>", "").strip()
+                answer = answer.replace("<|endoftext|>", "").replace("<|end|>", "").replace("<｜end▁of▁sentence｜>", "").strip()
                 reponse_frag = json.dumps({
                     "id": "chatcmpl-{chat_id}",
                     "object": "chat.completion.chunk",
