@@ -33,13 +33,13 @@ def configuration_parameter():
 
     parser.add_argument("--num_train_epochs", type=int, default=100,
                         help="Number of training epochs")
-    parser.add_argument("--per_device_train_batch_size", type=int, default=4,
+    parser.add_argument("--per_device_train_batch_size", type=int, default=1,
                         help="Batch size per device during training")
     parser.add_argument("--gradient_accumulation_steps", type=int, default=16,
                         help="Number of updates steps to accumulate before performing a backward/update pass")
     parser.add_argument("--learning_rate", type=float, default=2e-4,
                         help="Learning rate for the optimizer")
-    parser.add_argument("--max_seq_length", type=int, default=2048,
+    parser.add_argument("--max_seq_length", type=int, default=4096,
                         help="Maximum sequence length for the input")
     parser.add_argument("--logging_steps", type=int, default=10,
                         help="Number of steps between logging metrics")

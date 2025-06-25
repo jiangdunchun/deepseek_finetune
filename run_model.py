@@ -15,7 +15,7 @@ parser.add_argument("--model_path", type=str, required=True,
                     help="Path to the model directory downloaded locally")
 parser.add_argument("--port", type=int, default=8001,
                     help="Port of the service")
-parser.add_argument("--max_seq_length", type=int, default=2048,
+parser.add_argument("--max_seq_length", type=int, default=4096,
                     help="Maximum sequence length for the input")
 args = parser.parse_args()
 
@@ -35,6 +35,8 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     model: str
     messages: List[ChatMessage]
+    temperature: float = 0.7
+    top_p: float = 0.9    
     stream: bool = False
     max_tokens: Optional[int] = args.max_seq_length
 
@@ -54,8 +56,8 @@ async def chat_completion(request: ChatRequest):
                 inputs,
                 streamer=streamer,
                 max_new_tokens=request.max_tokens,
-                temperature=0.7,
-                top_p=0.95,
+                temperature=request.temperature,
+                top_p=request.top_p,
                 do_sample=True,
             )
 
