@@ -15,7 +15,7 @@ parser.add_argument("--model_path", type=str, required=True,
                     help="Path to the model directory downloaded locally")
 parser.add_argument("--port", type=int, default=8001,
                     help="Port of the service")
-parser.add_argument("--max_seq_length", type=int, default=4096,
+parser.add_argument("--max_seq_length", type=int, default=512,
                     help="Maximum sequence length for the input")
 args = parser.parse_args()
 
@@ -48,7 +48,7 @@ async def chat_completion(request: ChatRequest):
     prompt += "\n Assistant:"
 
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    if len(inputs) > args.max_seq_length: inputs = inputs[-1*args.max_seq_length:]
+    if len(inputs) > 4096: inputs = inputs[-4096:]
     if request.stream:
         def generate_stream():
             streamer = TextIteratorStreamer(tokenizer, skip_prompt=True)
