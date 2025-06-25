@@ -39,7 +39,7 @@ def configuration_parameter():
                         help="Number of updates steps to accumulate before performing a backward/update pass")
     parser.add_argument("--learning_rate", type=float, default=2e-4,
                         help="Learning rate for the optimizer")
-    parser.add_argument("--max_seq_length", type=int, default=1024,
+    parser.add_argument("--max_seq_length", type=int, default=2048,
                         help="Maximum sequence length for the input")
     parser.add_argument("--logging_steps", type=int, default=10,
                         help="Number of steps between logging metrics")
@@ -188,7 +188,7 @@ def load_model(args, train_dataset, data_collator):
     )
 
     model = get_peft_model(model.module if isinstance(model, DDP) else model, config)
-    print("model:", model)
+    #print("model:", model)
     model.print_trainable_parameters()
 
     # swanlab_config = {
@@ -218,19 +218,24 @@ def load_model(args, train_dataset, data_collator):
 #{"conversation_id": 1, "conversation": [{"user": "", "assistant": ""}]}
 def process_data(data: dict, tokenizer, max_seq_length):
     conversation = data["conversation"]
-    pre_text = ""
-    if data["prompt"] != "":
-        pre_text = "System:" + data["prompt"] + "\n\n"
-    samples = []
+    samples, pre_turns = [], []
     for i, conv in enumerate(conversation):
-        human_text = conv["user"].strip()
+        pre_text = ("System:" + data["prompt"] + "\n\n") if data["prompt"] != "" else "" 
+        for user_text, assistant_text in pre_turns:
+            pre_text += "User:" + user_text + "\n\nAssistant:" + assistant_text + "\n\n"
+
+        user_text = conv["user"].strip()
         assistant_text = conv["assistant"].strip()
 
-        input_text = pre_text + "User:" + human_text + "\n\nAssistant:"
+        input_text = pre_text + "User:" + user_text + "\n\nAssistant:"
         pre_text = input_text + assistant_text + "\n\n"
+
+        pre_turns.append([user_text, assistant_text])
+        if len(pre_turns) > 3: pre_turns.pop(0)
 
         #print("input>>>>>>>>>>>>>:", input_text)
         #print("output>>>>>>>>>>>>>:", assistant_text)
+
         input_tokenizer = tokenizer(
             input_text,
             add_special_tokens=False,

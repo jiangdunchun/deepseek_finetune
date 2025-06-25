@@ -15,6 +15,8 @@ parser.add_argument("--model_path", type=str, required=True,
                     help="Path to the model directory downloaded locally")
 parser.add_argument("--port", type=int, default=8001,
                     help="Port of the service")
+parser.add_argument("--max_seq_length", type=int, default=2048,
+                    help="Maximum sequence length for the input")
 args = parser.parse_args()
 
 
@@ -34,7 +36,7 @@ class ChatRequest(BaseModel):
     model: str
     messages: List[ChatMessage]
     stream: bool = False
-    max_tokens: Optional[int] = 1024
+    max_tokens: Optional[int] = args.max_seq_length
 
 
 app = FastAPI()
@@ -44,7 +46,7 @@ async def chat_completion(request: ChatRequest):
     prompt += "\n Assistant:"
 
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    inputs = inputs[-1024:]
+    if len(inputs) > args.max_seq_length: inputs = inputs[-1*args.max_seq_length:]
     if request.stream:
         def generate_stream():
             streamer = TextIteratorStreamer(tokenizer, skip_prompt=True)
