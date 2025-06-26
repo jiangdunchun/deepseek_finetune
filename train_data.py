@@ -48,7 +48,7 @@ def init_args():
                         help="temperature of model")
     parser.add_argument("--top_p", type=float, default=0.9,
                         help="top_p of model")
-    parser.add_argument("--output", type=str, required=True,
+    parser.add_argument("--output", type=str, default="",
                         help=".jsonl format for train data, other format for chat history")
 
 
@@ -161,7 +161,8 @@ def append_conversation(args, conversation):
         with open(args.output, 'a', encoding='utf-8') as file:
             file.write(json.dumps(dataclass_to_dict(conversation)))
             file.write('\n')
-    else:
+    elif args.question != "":
+        args.output = args.question[:args.question.rindex('.')] + ".md"
         with open(args.output, 'a', encoding='utf-8') as file:
             file.write(f"# {conversation.conversation_id}\n")
             for round in conversation.conversation:
