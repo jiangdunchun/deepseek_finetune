@@ -163,9 +163,9 @@ def append_conversation(args, conversation):
             file.write('\n')
     else:
         with open(args.output, 'a', encoding='utf-8') as file:
-            file.write(f"# {conversation.conversation_id}\n\n")
+            file.write(f"# {conversation.conversation_id}\n")
             for round in conversation.conversation:
-                file.write(f"### User\n\n{round.user}\n\n---\n### Assistant\n\n{round.assistant}\n\n---\n")
+                file.write(f"### User\n{round.user}\n---\n### Assistant\n{round.assistant}\n---\n")
 
 
 if __name__ == "__main__":
