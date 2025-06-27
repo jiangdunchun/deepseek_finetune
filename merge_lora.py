@@ -7,11 +7,11 @@ import shutil
 import argparse
 
 parser = argparse.ArgumentParser(description="Merge Model")
-parser.add_argument("--pretrained", type=str, required=True,
+parser.add_argument("--pretrained", type=str, default="./models/deepseek-llm-7b-chat",
                     help="Path to the pretrained model directory")
-parser.add_argument("--finetuned", type=str, required=True,
+parser.add_argument("--finetuned", type=str, default="./output",
                     help="Path to the lora out directory")
-parser.add_argument("--merged", type=str, required=True,
+parser.add_argument("--merged", type=str, default="./output/deepseek-7b-finetune",
                     help="Path to the merged model directory")
 args = parser.parse_args()
 

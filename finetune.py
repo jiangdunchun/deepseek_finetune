@@ -23,12 +23,12 @@ import json
 def configuration_parameter():
     parser = argparse.ArgumentParser(description="LoRA fine-tuning for deepseek model")
 
-    parser.add_argument("--model_name_or_path", type=str, default="./model",
+    parser.add_argument("--model_name_or_path", type=str, default="../.cache/modelscope/models/deepseek-ai/deepseek-llm-7b-chat/",
                         help="Path to the model directory downloaded locally")
     parser.add_argument("--output_dir", type=str, default="./output",
                         help="Directory to save the fine-tuned model and checkpoints")
 
-    parser.add_argument("--train_data", type=str, required=True,
+    parser.add_argument("--train_data", type=str, default="./train_data/train_data.jsonl",
                         help="Path to the training data file in JSONL format")
 
     parser.add_argument("--num_train_epochs", type=int, default=100,

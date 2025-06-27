@@ -11,13 +11,19 @@ import argparse
 
 #http://localhost:8001/v1/chat/completions
 parser = argparse.ArgumentParser(description="Run Model")
-parser.add_argument("--model_path", type=str, required=True,
+parser.add_argument("--model_path", type=str, default="./output/deepseek-7b-finetune",
                     help="Path to the model directory downloaded locally")
 parser.add_argument("--port", type=int, default=8001,
                     help="Port of the service")
+parser.add_argument("--prompt", type=str, default="./train_data/prompt.md",
+                    help="prompt text file, ignore the system content if existed")                    
 parser.add_argument("--max_seq_length", type=int, default=512,
                     help="Maximum sequence length for the input")
 args = parser.parse_args()
+args.prompt_txt = ""
+if args.prompt != "":
+    with open(args.prompt, 'r', encoding='utf-8') as file:
+        args.prompt_txt = file.read()
 
 
 model = AutoModelForCausalLM.from_pretrained(
@@ -31,7 +37,7 @@ tokenizer = AutoTokenizer.from_pretrained(args.model_path)
 
 class ChatMessage(BaseModel):
     role: str
-    content: str
+    content: object
 class ChatRequest(BaseModel):
     model: str
     messages: List[ChatMessage]
@@ -44,7 +50,14 @@ class ChatRequest(BaseModel):
 app = FastAPI()
 @app.post("/v1/chat/completions")
 async def chat_completion(request: ChatRequest):
-    prompt = "\n".join([f"{msg.role}: {msg.content}" for msg in request.messages])
+    prompt = ""
+    if args.prompt_txt != "":
+        prompt = f"system: {args.prompt_txt}"
+    for msg in request.messages:
+        if msg.role == "system" and args.prompt_txt != "": continue
+        if prompt != "": prompt += "\n "
+        if type(msg.content) != str:  msg.content = "success" if "success" in str(msg.content) else "failed"
+        prompt += f"{msg.role}: {msg.content}"
     prompt += "\n Assistant:"
 
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)

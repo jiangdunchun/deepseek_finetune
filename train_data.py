@@ -34,7 +34,7 @@ def dataclass_to_dict(instance):
 def init_args():
     parser = argparse.ArgumentParser(description="Prepare the train data")
 
-    parser.add_argument("--prompt", type=str, default="",
+    parser.add_argument("--prompt", type=str, default="./train_data/prompt.md",
                         help="prompt text file")
     parser.add_argument("--question", type=str, default="",
                         help="question file in lines")
@@ -161,7 +161,8 @@ def append_conversation(args, conversation):
         with open(args.output, 'a', encoding='utf-8') as file:
             file.write(json.dumps(dataclass_to_dict(conversation)))
             file.write('\n')
-    elif args.question != "":
+    else:
+        if args.output == "" and args.question != "": args.output = args.question[:args.question.rindex('.')] + ".md"    
         args.output = args.question[:args.question.rindex('.')] + ".md"
         with open(args.output, 'a', encoding='utf-8') as file:
             file.write(f"# {conversation.conversation_id}\n")
